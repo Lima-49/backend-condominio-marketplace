@@ -1,0 +1,128 @@
+// Schema Prisma — Vitrine do Condominio
+// Fonte de verdade: docs/architecture/DATABASE_MODEL.md
+//
+// Observacao (desvio documentado no README do backend): o DSL do Prisma nao
+// expressa nativamente CHECK constraints, colunas geradas (STORED) nem
+// indices parciais (WHERE ...). Essas pecas (CHECK de status/price_cents,
+// coluna gerada `search_text`, indice GIN de pg_trgm e os indices parciais
+// `WHERE deleted_at IS NULL`) sao criadas na migration SQL manual em
+// `prisma/migrations/0001_init/migration.sql`, mantendo o schema abaixo como
+// fonte de verdade para os tipos do Prisma Client.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Condominium {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  users          User[]
+  products       Product[]
+  whatsappClicks WhatsappClick[]
+
+  @@map("condominiums")
+}
+
+model User {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  condominiumId String   @map("condominium_id") @db.Uuid
+  fullName      String   @map("full_name")
+  whatsapp      String
+  email         String   @unique
+  passwordHash  String   @map("password_hash")
+  block         String
+  apartment     String
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  condominium Condominium @relation(fields: [condominiumId], references: [id])
+
+  productsAsSeller     Product[]       @relation("SellerProducts")
+  whatsappClicksBuyer  WhatsappClick[] @relation("BuyerClicks")
+  whatsappClicksSeller WhatsappClick[] @relation("SellerClicks")
+
+  // Suporta FK composta de products/whatsapp_clicks -> users(id, condominium_id)
+  @@unique([id, condominiumId], name: "users_id_condominium_id_key")
+  @@index([condominiumId], name: "idx_users_condominium_id")
+  @@map("users")
+}
+
+model Category {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  products Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sellerId      String    @map("seller_id") @db.Uuid
+  condominiumId String    @map("condominium_id") @db.Uuid
+  categoryId    String    @map("category_id") @db.Uuid
+  name          String    @db.VarChar(120)
+  description   String
+  priceCents    Int       @map("price_cents")
+  // CHECK (status in ('available','reserved','sold','inactive')) aplicado na migration SQL.
+  status        String    @default("available")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at")
+
+  condominium Condominium @relation(fields: [condominiumId], references: [id])
+  category    Category    @relation(fields: [categoryId], references: [id])
+  seller      User        @relation("SellerProducts", fields: [sellerId, condominiumId], references: [id, condominiumId])
+
+  images         ProductImage[]
+  whatsappClicks WhatsappClick[]
+
+  // Suporta FK composta de whatsapp_clicks -> products(id, condominium_id)
+  @@unique([id, condominiumId], name: "products_id_condominium_id_key")
+  @@index([condominiumId, status, createdAt], name: "idx_products_condominium_status_created")
+  @@index([condominiumId, categoryId], name: "idx_products_condominium_category")
+  @@index([sellerId, status], name: "idx_products_seller_id")
+  @@map("products")
+}
+
+model ProductImage {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productId String   @map("product_id") @db.Uuid
+  url       String
+  position  Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, position], name: "idx_product_images_product_id")
+  @@map("product_images")
+}
+
+model WhatsappClick {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productId     String   @map("product_id") @db.Uuid
+  buyerId       String   @map("buyer_id") @db.Uuid
+  sellerId      String   @map("seller_id") @db.Uuid
+  condominiumId String   @map("condominium_id") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  condominium Condominium @relation(fields: [condominiumId], references: [id])
+  product     Product     @relation(fields: [productId, condominiumId], references: [id, condominiumId])
+  buyer       User        @relation("BuyerClicks", fields: [buyerId, condominiumId], references: [id, condominiumId])
+  seller      User        @relation("SellerClicks", fields: [sellerId, condominiumId], references: [id, condominiumId])
+
+  @@index([productId], name: "idx_whatsapp_clicks_product_id")
+  @@index([condominiumId, createdAt], name: "idx_whatsapp_clicks_condominium_id_created")
+  @@map("whatsapp_clicks")
+}
