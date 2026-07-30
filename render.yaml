@@ -1,0 +1,70 @@
+# Render Blueprint — cria os dois servicos (main e homol) de uma vez.
+# Uso: no dashboard do Render, "New" > "Blueprint", aponte para este
+# repositorio. Variaveis marcadas "sync: false" sao preenchidas manualmente
+# no dashboard apos a criacao (segredos e valores especificos de cada conta).
+# Ver docs/architecture/DEPLOY.md para o passo a passo completo.
+
+services:
+  - type: web
+    name: vitrine-condominio-backend
+    runtime: node
+    plan: free
+    branch: main
+    region: oregon
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npx prisma migrate deploy && node dist/main
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: UPLOAD_STORAGE
+        value: r2
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET_NAME
+        value: vitrine-condominio-uploads
+      - key: R2_PUBLIC_URL
+        sync: false
+      - key: FRONTEND_URL
+        value: https://vitrine-condominio.pages.dev
+      - key: WHATSAPP_COUNTRY_CODE
+        value: "55"
+
+  - type: web
+    name: vitrine-condominio-backend-homol
+    runtime: node
+    plan: free
+    branch: homol
+    region: oregon
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npx prisma migrate deploy && node dist/main
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: UPLOAD_STORAGE
+        value: r2
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET_NAME
+        value: vitrine-condominio-uploads-homol
+      - key: R2_PUBLIC_URL
+        sync: false
+      - key: FRONTEND_URL
+        value: https://homol.vitrine-condominio.pages.dev
+      - key: WHATSAPP_COUNTRY_CODE
+        value: "55"
