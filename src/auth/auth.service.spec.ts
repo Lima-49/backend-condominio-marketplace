@@ -52,6 +52,7 @@ describe('AuthService', () => {
         whatsapp: '11999999999',
         block: 'A',
         apartment: '101',
+        role: 'resident',
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -72,6 +73,7 @@ describe('AuthService', () => {
         whatsapp: '11999999999',
         block: 'A',
         apartment: '101',
+        role: 'resident',
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -86,6 +88,33 @@ describe('AuthService', () => {
       expect(result.user).not.toHaveProperty('block');
       expect(result.user).not.toHaveProperty('apartment');
       expect(result.accessToken).toBe('signed.jwt.token');
+    });
+
+    it('inclui role do usuario no payload assinado e na resposta (docs/product/ADMIN_DASHBOARD.md H1)', async () => {
+      const passwordHash = await bcrypt.hash('senhaCorreta123', 10);
+      usersService.findByEmail.mockResolvedValue({
+        id: 'admin-1',
+        condominiumId: 'condo-1',
+        fullName: 'Admin Plataforma',
+        email: 'admin@example.com',
+        passwordHash,
+        whatsapp: '11999999999',
+        block: 'A',
+        apartment: '101',
+        role: 'platform_admin',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const result = await service.login({
+        email: 'admin@example.com',
+        password: 'senhaCorreta123',
+      });
+
+      expect(result.user.role).toBe('platform_admin');
+      expect(jwtService.sign).toHaveBeenCalledWith(
+        expect.objectContaining({ role: 'platform_admin' }),
+      );
     });
   });
 
@@ -120,6 +149,7 @@ describe('AuthService', () => {
         whatsapp: '11999999999',
         block: 'A',
         apartment: '101',
+        role: 'resident',
         createdAt: new Date(),
         updatedAt: new Date(),
       });

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
+import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
 import { CategoriesModule } from './categories/categories.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
@@ -22,6 +23,7 @@ import { WhatsappClicksModule } from './whatsapp-clicks/whatsapp-clicks.module';
     UploadsModule,
     WhatsappClicksModule,
     ProductsModule,
+    AdminModule,
   ],
   providers: [
     {

@@ -78,6 +78,7 @@ describe('ProductsService', () => {
     id: USER_A_ID,
     condominiumId: CONDO_1_ID,
     email: 'a@example.com',
+    role: 'resident',
   };
 
   beforeEach(() => {
