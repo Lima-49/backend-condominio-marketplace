@@ -1,0 +1,8 @@
+version: 2
+
+secret:
+  ignored-paths:
+    # Arquivos de teste usam senhas fixas e falsas como fixture (ex: 'senhaCorreta123'
+    # em auth.service.spec.ts) para exercitar login/hash. Nao sao credenciais reais.
+    - "**/*.spec.ts"
+    - "**/*.test.ts"
