@@ -40,7 +40,7 @@ export class AuthService {
       passwordHash,
     });
 
-    return this.buildAuthResponse(user.id, user.fullName, user.email, user.condominiumId);
+    return this.buildAuthResponse(user.id, user.fullName, user.email, user.condominiumId, user.role);
   }
 
   async login(dto: LoginDto): Promise<AuthResponseDto> {
@@ -55,7 +55,7 @@ export class AuthService {
       throw new UnauthorizedException('Credenciais invalidas');
     }
 
-    return this.buildAuthResponse(user.id, user.fullName, user.email, user.condominiumId);
+    return this.buildAuthResponse(user.id, user.fullName, user.email, user.condominiumId, user.role);
   }
 
   async me(userId: string): Promise<MeResponseDto> {
@@ -70,6 +70,7 @@ export class AuthService {
       email: user.email,
       condominiumId: user.condominiumId,
       condominiumName: user.condominium.name,
+      role: user.role,
     };
   }
 
@@ -78,16 +79,21 @@ export class AuthService {
     fullName: string,
     email: string,
     condominiumId: string,
+    role: string,
   ): AuthResponseDto {
+    // `role` entra no payload do JWT para os guards do painel admin
+    // decidirem acesso sem consultar o banco a cada request
+    // (docs/product/ADMIN_DASHBOARD.md secao 7).
     const accessToken = this.jwtService.sign({
       sub: id,
       condominiumId,
       email,
+      role,
     });
 
     return {
       accessToken,
-      user: { id, fullName, email, condominiumId },
+      user: { id, fullName, email, condominiumId, role },
     };
   }
 }
