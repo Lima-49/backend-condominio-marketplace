@@ -8,6 +8,7 @@ export interface JwtPayload {
   sub: string;
   condominiumId: string;
   email: string;
+  role?: string;
   iat: number;
   exp: number;
 }
@@ -32,6 +33,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       id: payload.sub,
       condominiumId: payload.condominiumId,
       email: payload.email,
+      // Tokens emitidos antes da migration 0003 (role no payload) nao tem
+      // esse claim; tratamos como 'resident' (nunca abre acesso admin por
+      // omissao) ate o usuario logar de novo e receber um token com role.
+      role: (payload.role as AuthenticatedUser['role']) ?? 'resident',
     };
   }
 }

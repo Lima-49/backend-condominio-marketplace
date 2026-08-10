@@ -41,6 +41,11 @@ model User {
   passwordHash  String   @map("password_hash")
   block         String
   apartment     String
+  // CHECK (role IN ('resident','platform_admin')) aplicado na migration SQL
+  // (0003_platform_admin_panel), mesmo padrao ja usado em products.status.
+  // Default 'resident'; so atribuido para 'platform_admin' manualmente pelo
+  // time (sem endpoint de auto-promocao — ver docs/product/ADMIN_DASHBOARD.md).
+  role          String   @default("resident")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
@@ -53,6 +58,9 @@ model User {
   // Suporta FK composta de products/whatsapp_clicks -> users(id, condominium_id)
   @@unique([id, condominiumId], name: "users_id_condominium_id_key")
   @@index([condominiumId], name: "idx_users_condominium_id")
+  // Suporta agregacoes do painel admin (usuarios por condominio filtrando
+  // role = 'resident', card resident vs platform_admin).
+  @@index([role, condominiumId], name: "idx_users_role_condominium")
   @@map("users")
 }
 
@@ -93,6 +101,11 @@ model Product {
   @@index([condominiumId, status, createdAt], name: "idx_products_condominium_status_created")
   @@index([condominiumId, categoryId], name: "idx_products_condominium_category")
   @@index([sellerId, status], name: "idx_products_seller_id")
+  // Indices parciais (WHERE deleted_at IS NULL, aplicado na migration SQL
+  // 0003_platform_admin_panel) para as agregacoes globais (cross-condominio)
+  // do painel administrativo: ranking de categorias e ranking de usuarios.
+  @@index([categoryId], name: "idx_products_category_active")
+  @@index([sellerId], name: "idx_products_seller_active")
   @@map("products")
 }
 

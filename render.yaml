@@ -33,7 +33,7 @@ services:
       - key: R2_PUBLIC_URL
         sync: false
       - key: FRONTEND_URL
-        value: https://vitrine-condominio.pages.dev
+        value: https://vitrine-condominio-marketplace.vitoraugustodelimasoares.workers.dev
       - key: WHATSAPP_COUNTRY_CODE
         value: "55"
 
@@ -65,6 +65,6 @@ services:
       - key: R2_PUBLIC_URL
         sync: false
       - key: FRONTEND_URL
-        value: https://homol.vitrine-condominio.pages.dev
+        value: https://frontend-condominio-marketplace.vitoraugustodelimasoares.workers.dev
       - key: WHATSAPP_COUNTRY_CODE
         value: "55"
