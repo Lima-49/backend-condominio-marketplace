@@ -59,7 +59,7 @@ export class ProductsService {
       condominiumId: user.condominiumId,
       deletedAt: null,
       ...(query.categoryId ? { categoryId: query.categoryId } : {}),
-      ...(query.status ? { status: query.status } : {}),
+      status: query.status ? query.status : { in: ['available', 'reserved'] },
       ...(query.search
         ? {
             OR: [
