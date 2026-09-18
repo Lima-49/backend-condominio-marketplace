@@ -1,0 +1,16 @@
+version: 2
+secret:
+  # Falsos positivos revisados manualmente: senhas fixas usadas apenas como
+  # fixture em testes unitarios de autenticacao (src/auth/auth.service.spec.ts),
+  # nunca credenciais reais nem usadas fora do escopo do teste.
+  # Cada entrada ignora exatamente aquele valor, no repo inteiro — nao
+  # desativa o detector "Generic Password" nem exclui pastas de teste.
+  ignored_matches:
+    - name: auth.service.spec.ts - senha de teste (login correto)
+      match: senhaCorreta123
+    - name: auth.service.spec.ts - senha de teste (login incorreto)
+      match: senhaErrada
+    - name: auth.service.spec.ts - senha de teste (email inexistente)
+      match: qualquer123
+    - name: auth.service.spec.ts - senha de teste (cadastro)
+      match: senhaSegura123

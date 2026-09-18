@@ -2,8 +2,10 @@ import { IsIn, IsOptional, IsString, IsUUID } from 'class-validator';
 import { PaginationQueryDto } from './pagination-query.dto';
 
 // `status=inactive` nao e aceito neste endpoint (API_SPEC.md secao 4,
-// GET /products) — reservado para moderacao futura.
-export const LISTABLE_PRODUCT_STATUSES = ['available', 'reserved', 'sold'] as const;
+// GET /products) — reservado para moderacao futura. `sold` tambem nao e
+// aceito: produtos vendidos nunca aparecem na vitrine geral (decisao #11,
+// DECISIONS_LOG.md). Use GET /products/mine para ver os proprios vendidos.
+export const LISTABLE_PRODUCT_STATUSES = ['available', 'reserved'] as const;
 export type ListableProductStatus = (typeof LISTABLE_PRODUCT_STATUSES)[number];
 
 export class ListProductsQueryDto extends PaginationQueryDto {
@@ -17,7 +19,7 @@ export class ListProductsQueryDto extends PaginationQueryDto {
 
   @IsOptional()
   @IsIn(LISTABLE_PRODUCT_STATUSES, {
-    message: 'status deve ser um de: available, reserved, sold',
+    message: 'status deve ser um de: available, reserved',
   })
   status?: ListableProductStatus;
 

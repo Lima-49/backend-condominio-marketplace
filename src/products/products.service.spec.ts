@@ -245,6 +245,40 @@ describe('ProductsService', () => {
     });
   });
 
+  describe('produto vendido nunca aparece na vitrine geral (GET /products)', () => {
+    beforeEach(() => {
+      prisma.product.findMany.mockResolvedValue([]);
+      prisma.product.count.mockResolvedValue(0);
+    });
+
+    it('sem filtro de status, restringe a available/reserved (sold fica de fora)', async () => {
+      await service.list(userA, { page: 1, limit: 20 });
+
+      expect(prisma.product.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ status: { in: ['available', 'reserved'] } }),
+        }),
+      );
+    });
+
+    it('com status=available explicito, filtra so por aquele status', async () => {
+      await service.list(userA, { page: 1, limit: 20, status: 'available' });
+
+      expect(prisma.product.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ status: 'available' }),
+        }),
+      );
+    });
+
+    it('GET /products/mine nao filtra por status (sold continua aparecendo)', async () => {
+      await service.mine(userA, { page: 1, limit: 20 });
+
+      const whereArg = prisma.product.findMany.mock.calls[0][0].where;
+      expect(whereArg).not.toHaveProperty('status');
+    });
+  });
+
   describe('resposta de detalhe/listagem nunca expoe dados sensiveis', () => {
     it('detalhe nunca inclui whatsapp/sellerId/block/apartment do vendedor', async () => {
       prisma.product.findFirst.mockResolvedValue({
