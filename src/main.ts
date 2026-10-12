@@ -11,7 +11,11 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const configService = app.get(ConfigService);
 
-  app.enableCors();
+  // So o frontend do proprio ambiente pode chamar a API pelo navegador.
+  const frontendUrl = (
+    configService.get<string>('FRONTEND_URL') ?? 'http://localhost:4200'
+  ).replace(/\/$/, '');
+  app.enableCors({ origin: frontendUrl });
 
   app.useGlobalPipes(
     new ValidationPipe({
